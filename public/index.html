@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>A-Mudar Engine</title>
+  <link rel="stylesheet" href="./css/form_style.css">
+</head>
+<body>
+  <div class="cf-wrapper">
+    <div class="cf-kpi">
+      <div class="box">Ruta<b id="sum-ruta">—</b></div>
+      <div class="box">Distancia<b id="sum-km">—</b></div>
+      <div class="box">Precio<b id="sum-precio">—</b></div>
+    </div>
+
+    <div id="frame-root"></div>
+  </div>
+
+  <!-- GM API KEY -->
+  <script async
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC2hqFp-HrrOUlRdyWiPiA9IuWoqj-QJzA&loading=async&libraries=places&language=es&region=CO">
+  </script>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

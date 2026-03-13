@@ -1,0 +1,53 @@
+<div>
+  <button class="cf-textbtn" data-back="step13-delicados">← Volver</button>
+
+  <h2 class="cf-title">Agregar items de la mudanza</h2>
+  <p class="cf-subtitle">
+    Aquí agregas todos los objetos generales. Estos se cobran con tarifa estándar por m³.
+    Busca por nombre para encontrarlos más rápido o explora por zonas y categorías.
+  </p>
+
+  <div class="catalog-search-wrap">
+    <div class="catalog-search-box">
+      <span class="catalog-search-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+          <path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </span>
+
+      <input id="catalog-search" class="catalog-search-input" type="text"
+        placeholder="Buscar mueble, caja, objeto o categoría..." />
+    </div>
+  </div>
+
+  <div id="catalog-root"></div>
+
+  <hr style="opacity:.15; margin:14px 0;">
+
+  <h3 class="cf-title" style="font-size:18px;">Objeto personalizado (si no aparece)</h3>
+  <p class="cf-subtitle">
+    Ingresa dimensiones en metros, calculamos m³ y lo agregas.
+  </p>
+
+  <div class="cf-grid">
+    <input id="custom-name" class="cf-input" placeholder="Nombre (ej: Mesa comedor)" />
+    <input id="custom-l" class="cf-input" type="number" step="0.01" min="0" placeholder="L (m)" />
+    <input id="custom-a" class="cf-input" type="number" step="0.01" min="0" placeholder="A (m)" />
+    <input id="custom-h" class="cf-input" type="number" step="0.01" min="0" placeholder="H (m)" />
+  </div>
+
+  <div class="cf-grid">
+    <div class="cf-note" id="custom-m3-preview">m³: —</div>
+    <button class="cf-btn" id="add-custom-item">Agregar personalizado</button>
+  </div>
+
+  <hr style="opacity:.15; margin:14px 0;">
+
+  <div class="cf-note" id="items-m3-total-preview">m³ items mudanza: —</div>
+  <div id="items-list" style="margin-top:14px;"></div>
+
+  <button class="cf-btn" id="items-continue" style="margin-top:12px;">
+    Ver resumen final
+  </button>
+</div>

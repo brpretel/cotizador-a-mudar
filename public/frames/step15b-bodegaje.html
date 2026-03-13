@@ -1,0 +1,58 @@
+<div>
+  <button class="cf-textbtn" data-back="step15-items-mudanza">← Volver</button>
+
+  <h2 class="cf-title">¿Necesitas bodegaje para la mudanza?</h2>
+  <p class="cf-subtitle">
+    Indícanos si además del servicio de mudanza necesitas almacenamiento temporal.
+  </p>
+
+  <div class="cf-choice-grid">
+    <button class="cf-choice-card is-primary" data-bodegaje="no" type="button">
+      <span class="cf-choice-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="cf-choice-title">No necesito bodegaje</span>
+      <span class="cf-choice-copy">
+        Continuaremos directamente al resumen final de la cotización.
+      </span>
+    </button>
+
+    <button class="cf-choice-card is-success" data-bodegaje="si" type="button">
+      <span class="cf-choice-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M4 8l8-4 8 4-8 4-8-4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M4 12l8 4 8-4" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M4 16l8 4 8-4" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span class="cf-choice-title">Sí necesito bodegaje</span>
+      <span class="cf-choice-copy">
+        Te pediremos cuántos días aproximados necesitas almacenar tus pertenencias.
+      </span>
+    </button>
+  </div>
+
+  <div id="bodegaje-dias-wrap" style="display:none; margin-top:16px;">
+    <label class="cf-label" for="bodegaje-dias-input">¿Cuántos días necesitas bodegaje?</label>
+    <input
+      id="bodegaje-dias-input"
+      class="cf-input"
+      type="number"
+      min="1"
+      step="1"
+      placeholder="Ej: 7"
+    />
+
+    <div class="cf-note">
+      Ingresa el número estimado de días que deseas almacenar los artículos.
+    </div>
+  </div>
+
+  <div id="bodegaje-send-status" class="cf-send-status" style="display:none;"></div>
+
+  <button class="cf-btn" id="bodegaje-continue" style="margin-top:12px;">
+    Ver resumen final
+  </button>
+</div>
