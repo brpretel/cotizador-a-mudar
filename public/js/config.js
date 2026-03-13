@@ -28,12 +28,12 @@ export const TARIFAS = {
       PRECIO_MIN: 140000,
       COSTO_OPERATIVO_KM: 5300,
       UTILIDAD: 0.30,
-      COSTO_PUBLICO_KM: 7000,
+      COSTO_PUBLICO_KM: 3500,
 
       COMPARTIDA: {
         DESCUENTO: 0.15,
-        PRECIO_KM: 5950,
-        AGRESIVA: { DESCUENTO: 0.20, PRECIO_KM: 5600 }
+        PRECIO_KM: 2975,
+        AGRESIVA: { DESCUENTO: 0.20, PRECIO_KM: 2800 }
       }
     }
   }
