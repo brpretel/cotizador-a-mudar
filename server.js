@@ -67,6 +67,10 @@ function metodoLabel(m) {
   return "—";
 }
 
+function yesNoMaybe(v) {
+  return v === true ? "Sí" : v === false ? "No" : "—";
+}
+
 async function sendEmail({ to, subject, html, text, attachments = [] }) {
   const recipients = Array.isArray(to) ? to.filter(Boolean) : [to].filter(Boolean);
 
@@ -124,6 +128,10 @@ async function sendEmail({ to, subject, html, text, attachments = [] }) {
   return info;
 }
 
+/* =========================================================
+   EMAILS - START
+========================================================= */
+
 function buildAdminStartEmailHTML({ customer, quoteSessionId }) {
   return `
   <div style="font-family:Arial,sans-serif;background:#f8fafc;padding:24px;color:#0f172a;">
@@ -157,6 +165,10 @@ Teléfono: ${customer.phone || "—"}
 ID sesión: ${quoteSessionId || "—"}`;
 }
 
+/* =========================================================
+   EMAILS - ABANDON
+========================================================= */
+
 function buildAdminAbandonEmailHTML({ customer, quoteSessionId, state }) {
   return `
   <div style="font-family:Arial,sans-serif;background:#f8fafc;padding:24px;color:#0f172a;">
@@ -177,15 +189,17 @@ function buildAdminAbandonEmailHTML({ customer, quoteSessionId, state }) {
         <div style="margin-top:16px;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;padding:16px;">
           <div><b>Paso:</b> ${escapeHtml(state?.step || "—")}</div>
           <div><b>Servicio:</b> ${escapeHtml(state?.servicio || "—")}</div>
+          <div><b>Servicio personalizado:</b> ${yesNoMaybe(state?.servicioPersonalizado)}</div>
+          <div><b>Descripción servicio personalizado:</b> ${escapeHtml(state?.servicioPersonalizadoDescripcion || "—")}</div>
           <div><b>Fecha mudanza:</b> ${escapeHtml(state?.fechaMudanzaLabel || "—")}</div>
           <div><b>Ruta:</b> ${escapeHtml(state?.tipoRuta || "—")}</div>
           <div><b>Tipo de mudanza:</b> ${escapeHtml(state?.tipoMudanza || "—")}</div>
           <div><b>Tarifa aplicada:</b> ${escapeHtml(state?.tarifaAplicadaLabel || "—")}</div>
           <div><b>Precio por km:</b> ${state?.precioKmAplicado ? money(state.precioKmAplicado) : "—"}</div>
           <div><b>Descuento aplicado:</b> ${state?.descuentoAplicadoPct ? `${state.descuentoAplicadoPct}%` : "0%"}</div>
-          <div><b>Desea bodegaje:</b> ${
-            state?.deseaBodegaje === true ? "Sí" : state?.deseaBodegaje === false ? "No" : "—"
-          }</div>
+          <div><b>Auto compartida aplicada:</b> ${yesNoMaybe(state?.autoSharedApplied)}</div>
+          <div><b>Mensaje ajuste:</b> ${escapeHtml(state?.autoSharedMessage || "—")}</div>
+          <div><b>Desea bodegaje:</b> ${yesNoMaybe(state?.deseaBodegaje)}</div>
           <div><b>Días de bodegaje:</b> ${state?.diasBodegaje || "—"}</div>
           <div><b>Origen:</b> ${escapeHtml(state?.origenDireccion || "—")}</div>
           <div><b>Destino:</b> ${escapeHtml(state?.destinoDireccion || "—")}</div>
@@ -207,20 +221,28 @@ ID sesión: ${quoteSessionId || "—"}
 
 Paso: ${state?.step || "—"}
 Servicio: ${state?.servicio || "—"}
+Servicio personalizado: ${yesNoMaybe(state?.servicioPersonalizado)}
+Descripción servicio personalizado: ${state?.servicioPersonalizadoDescripcion || "—"}
 Fecha mudanza: ${state?.fechaMudanzaLabel || "—"}
 Ruta: ${state?.tipoRuta || "—"}
 Tipo de mudanza: ${state?.tipoMudanza || "—"}
 Tarifa aplicada: ${state?.tarifaAplicadaLabel || "—"}
 Precio por km: ${state?.precioKmAplicado ? money(state.precioKmAplicado) : "—"}
-Descuento aplicado: ${state?.descuentoAplicadoPct ? `${state.descuentoAplicadoPct}%` : "0%"}
-Desea bodegaje: ${state?.deseaBodegaje === true ? "Sí" : state?.deseaBodegaje === false ? "No" : "—"}
+Descuento aplicado: ${state?.descuentoAplicadoPct ? `${state?.descuentoAplicadoPct}%` : "0%"}
+Auto compartida aplicada: ${yesNoMaybe(state?.autoSharedApplied)}
+Mensaje ajuste: ${state?.autoSharedMessage || "—"}
+Desea bodegaje: ${yesNoMaybe(state?.deseaBodegaje)}
 Días de bodegaje: ${state?.diasBodegaje || "—"}
 Origen: ${state?.origenDireccion || "—"}
 Destino: ${state?.destinoDireccion || "—"}
 KM: ${state?.distanciaKm || "—"}`;
 }
 
-function buildClientFinalEmailHTML(customer) {
+/* =========================================================
+   EMAILS - FINAL CLIENT
+========================================================= */
+
+function buildClientFinalEmailHTML(customer, state = {}) {
   return `
   <div style="font-family:Arial,sans-serif;background:#f3f6fb;padding:24px;color:#0f172a;">
     <div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;">
@@ -235,6 +257,33 @@ function buildClientFinalEmailHTML(customer) {
       <div style="padding:24px;font-size:15px;line-height:1.75;color:#334155;">
         <p>En breve nos contactaremos contigo para realizar el pago y proceder con la confirmación del servicio.</p>
         <p>En este correo encontrarás adjunto el PDF con la información completa de tu cotización.</p>
+
+        <div style="margin-top:16px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:16px;">
+          <div><b>Servicio:</b> ${escapeHtml(state?.servicio || "mudanza")}</div>
+          <div><b>Servicio personalizado:</b> ${yesNoMaybe(state?.servicioPersonalizado)}</div>
+          ${
+            state?.servicioPersonalizado
+              ? `<div><b>Descripción servicio personalizado:</b> ${escapeHtml(
+                  state?.servicioPersonalizadoDescripcion || "—"
+                )}</div>`
+              : ""
+          }
+          <div><b>Ruta:</b> ${escapeHtml(state?.tipoRuta || "—")}</div>
+          <div><b>Tipo de mudanza final:</b> ${escapeHtml(state?.tipoMudanza || "—")}</div>
+          <div><b>Tarifa aplicada:</b> ${escapeHtml(state?.tarifaAplicadaLabel || "—")}</div>
+        </div>
+
+        ${
+          state?.autoSharedApplied && state?.autoSharedMessage
+            ? `
+          <div style="margin-top:16px;background:#ecfdf3;border:1px solid #b7ebc6;border-radius:14px;padding:16px;color:#166534;">
+            <b>Ajuste aplicado:</b><br>
+            ${escapeHtml(state.autoSharedMessage)}
+          </div>
+        `
+            : ""
+        }
+
         <p style="margin-top:18px;">Gracias por confiar en <b>A-Mudar</b>.</p>
       </div>
     </div>
@@ -242,19 +291,31 @@ function buildClientFinalEmailHTML(customer) {
   `;
 }
 
-function buildClientFinalEmailText(customer) {
+function buildClientFinalEmailText(customer, state = {}) {
   return `Hola ${customer.fullName || "cliente"},
 
 Tu cotización ha sido completada.
 
 En breve nos contactaremos contigo para realizar el pago y proceder con la confirmación del servicio.
 
+Servicio: ${state?.servicio || "mudanza"}
+Servicio personalizado: ${yesNoMaybe(state?.servicioPersonalizado)}
+Descripción servicio personalizado: ${state?.servicioPersonalizado ? state?.servicioPersonalizadoDescripcion || "—" : "—"}
+Ruta: ${state?.tipoRuta || "—"}
+Tipo de mudanza final: ${state?.tipoMudanza || "—"}
+Tarifa aplicada: ${state?.tarifaAplicadaLabel || "—"}
+Ajuste automático: ${state?.autoSharedApplied ? state?.autoSharedMessage || "Sí" : "No"}
+
 Estamos encantados de servirte. En este correo encontrarás el PDF con la información completa de la cotización.
 
 A-Mudar`;
 }
 
-function buildAdminFinalEmailHTML(customer) {
+/* =========================================================
+   EMAILS - FINAL ADMIN
+========================================================= */
+
+function buildAdminFinalEmailHTML(customer, state = {}) {
   return `
   <div style="font-family:Arial,sans-serif;background:#f3f6fb;padding:24px;color:#0f172a;">
     <div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;">
@@ -273,22 +334,48 @@ function buildAdminFinalEmailHTML(customer) {
           <div><b>Nombre:</b> ${escapeHtml(customer.fullName || "—")}</div>
           <div><b>Correo:</b> ${escapeHtml(customer.email || "—")}</div>
           <div><b>Teléfono:</b> ${escapeHtml(customer.phone || "—")}</div>
+          <div><b>Servicio personalizado:</b> ${yesNoMaybe(state?.servicioPersonalizado)}</div>
+          <div><b>Descripción servicio personalizado:</b> ${escapeHtml(
+            state?.servicioPersonalizadoDescripcion || "—"
+          )}</div>
+          <div><b>Tipo de mudanza final:</b> ${escapeHtml(state?.tipoMudanza || "—")}</div>
+          <div><b>Tarifa aplicada:</b> ${escapeHtml(state?.tarifaAplicadaLabel || "—")}</div>
         </div>
+
+        ${
+          state?.autoSharedApplied && state?.autoSharedMessage
+            ? `
+          <div style="margin-top:16px;background:#ecfdf3;border:1px solid #b7ebc6;border-radius:14px;padding:16px;color:#166534;">
+            <b>Ajuste aplicado:</b><br>
+            ${escapeHtml(state.autoSharedMessage)}
+          </div>
+        `
+            : ""
+        }
       </div>
     </div>
   </div>
   `;
 }
 
-function buildAdminFinalEmailText(customer) {
+function buildAdminFinalEmailText(customer, state = {}) {
   return `Nueva cotización completada.
 
 Cliente: ${customer.fullName || "—"}
 Correo: ${customer.email || "—"}
 Teléfono: ${customer.phone || "—"}
+Servicio personalizado: ${yesNoMaybe(state?.servicioPersonalizado)}
+Descripción servicio personalizado: ${state?.servicioPersonalizadoDescripcion || "—"}
+Tipo de mudanza final: ${state?.tipoMudanza || "—"}
+Tarifa aplicada: ${state?.tarifaAplicadaLabel || "—"}
+Ajuste automático: ${state?.autoSharedApplied ? state?.autoSharedMessage || "Sí" : "No"}
 
 Se adjunta el PDF con toda la información detallada de la cotización.`;
 }
+
+/* =========================================================
+   PDF
+========================================================= */
 
 function ensurePdfSpace(doc, needed = 80) {
   const bottom = doc.page.height - doc.page.margins.bottom;
@@ -427,6 +514,9 @@ async function buildQuotePdfBuffer(payload) {
       `Cliente: ${customer.fullName || "—"}`,
       `Correo: ${customer.email || "—"}`,
       `Teléfono: ${customer.phone || "—"}`,
+      `Servicio: ${state.servicio || "—"}`,
+      `Servicio personalizado: ${yesNoMaybe(state.servicioPersonalizado)}`,
+      `Descripción servicio personalizado: ${state.servicioPersonalizado ? state.servicioPersonalizadoDescripcion || "—" : "—"}`,
       `Fecha programada: ${state.fechaMudanzaLabel || "—"}`,
       `Ruta: ${state.tipoRuta || "—"} · ${state.distanciaKm || "—"} km`,
       `Origen: ${state.origenDireccion || "—"}`,
@@ -439,7 +529,7 @@ async function buildQuotePdfBuffer(payload) {
       `Precio por km: ${state.precioKmAplicado ? money(state.precioKmAplicado) : "—"}`,
       `Descuento aplicado: ${state.descuentoAplicadoPct ? `${state.descuentoAplicadoPct}%` : "0%"}`,
       `Tiempo estimado del servicio: ${state.tiempoEstimadoServicio || "—"}`,
-      `Desea bodegaje: ${state.deseaBodegaje === true ? "Sí" : state.deseaBodegaje === false ? "No" : "—"}`,
+      `Desea bodegaje: ${yesNoMaybe(state.deseaBodegaje)}`,
       `Días de bodegaje: ${state.diasBodegaje || "—"}`
     ]);
 
@@ -452,14 +542,16 @@ async function buildQuotePdfBuffer(payload) {
     ]);
 
     infoBox("Información adicional", [
-      `Delicados: ${state.delicados === true ? "Sí" : state.delicados === false ? "No" : "—"}`,
-      `Descripción delicados: ${state.delicados === true ? (state.delicadosDescripcion || "—") : "—"}`
+      `Delicados: ${yesNoMaybe(state.delicados)}`,
+      `Descripción delicados: ${state.delicados === true ? state.delicadosDescripcion || "—" : "—"}`,
+      `Ajuste automático a compartida: ${yesNoMaybe(state.autoSharedApplied)}`,
+      `Mensaje ajuste: ${state.autoSharedMessage || "—"}`
     ]);
 
     sectionTitle("Objetos con carga especial · Origen");
     infoBox("Resumen origen", [
       `Pisos: ${o.pisos ?? "—"}`,
-      `Ascensor: ${o.hayAscensor ? "Sí" : o.hayAscensor === false ? "No" : "—"}`,
+      `Ascensor: ${yesNoMaybe(o.hayAscensor)}`,
       `Especiales: ${origenEspeciales.length}`,
       `Camión < 40m: ${
         o.camionMenos40m === true
@@ -492,7 +584,7 @@ async function buildQuotePdfBuffer(payload) {
     sectionTitle("Objetos con carga especial · Destino");
     infoBox("Resumen destino", [
       `Pisos: ${d.pisos ?? "—"}`,
-      `Ascensor: ${d.hayAscensor ? "Sí" : d.hayAscensor === false ? "No" : "—"}`,
+      `Ascensor: ${yesNoMaybe(d.hayAscensor)}`,
       `Especiales: ${destinoEspeciales.length}`,
       `Camión < 40m: ${
         d.camionMenos40m === true
@@ -562,6 +654,10 @@ async function buildQuotePdfBuffer(payload) {
   });
 }
 
+/* =========================================================
+   ROUTES
+========================================================= */
+
 app.post("/api/quote-start", async (req, res) => {
   try {
     const { customer, quoteSessionId } = req.body || {};
@@ -612,6 +708,7 @@ app.post("/api/quote-submit", async (req, res) => {
   try {
     const payload = req.body || {};
     const customer = payload.customer || {};
+    const state = payload.state || {};
 
     if (!customer.email || !customer.fullName || !customer.phone) {
       return res.status(400).json({ ok: false, error: "Faltan datos del cliente." });
@@ -632,16 +729,16 @@ app.post("/api/quote-submit", async (req, res) => {
     await sendEmail({
       to: process.env.ADMIN_EMAIL,
       subject: `Nueva cotización completada por ${customer.fullName}`,
-      html: buildAdminFinalEmailHTML(customer),
-      text: buildAdminFinalEmailText(customer),
+      html: buildAdminFinalEmailHTML(customer, state),
+      text: buildAdminFinalEmailText(customer, state),
       attachments: [attachment]
     });
 
     await sendEmail({
       to: customer.email,
       subject: "Tu cotización ha sido completada - A-Mudar",
-      html: buildClientFinalEmailHTML(customer),
-      text: buildClientFinalEmailText(customer),
+      html: buildClientFinalEmailHTML(customer, state),
+      text: buildClientFinalEmailText(customer, state),
       attachments: [attachment]
     });
 

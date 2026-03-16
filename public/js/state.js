@@ -16,6 +16,9 @@ export const state = {
   },
 
   servicio: null,
+  servicioPersonalizado: false,
+  servicioPersonalizadoDescripcion: "",
+
   fechaMudanzaISO: "",
   fechaMudanzaLabel: "",
   fechaMudanzaEsMismaSemana: false,
@@ -54,9 +57,11 @@ export const state = {
 
   itemsMudanza: [],
 
-  /* NUEVO */
   deseaBodegaje: null,
   diasBodegaje: 0,
+
+  autoSharedApplied: false,
+  autoSharedMessage: "",
 
   origen: {
     inmueble: null,

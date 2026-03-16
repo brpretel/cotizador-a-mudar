@@ -94,6 +94,134 @@ function updateFechaMudanzaMeta() {
 }
 
 /* =========================================================
+   REGLA MÍNIMO SERVICIO TOTAL
+========================================================= */
+
+function clearAutoSharedFlag() {
+  state.autoSharedApplied = false;
+  state.autoSharedMessage = "";
+}
+
+function resetQuoteState() {
+  state.step = "step0-contacto";
+
+  state.quoteSessionId = generateSessionId();
+
+  state.notifications = {
+    startedSent: false,
+    abandonedSent: false,
+    completed: false
+  };
+
+  state.customer = {
+    fullName: "",
+    email: "",
+    phone: ""
+  };
+
+  state.servicio = null;
+  state.servicioPersonalizado = false;
+  state.servicioPersonalizadoDescripcion = "";
+
+  state.fechaMudanzaISO = "";
+  state.fechaMudanzaLabel = "";
+  state.fechaMudanzaEsMismaSemana = false;
+
+  state.tipoRuta = null;
+  state.distanciaKm = 0;
+  state.tipoMudanza = null;
+  state.inmuebleOrigen = null;
+
+  state.precioBase = 0;
+  state.precioFinal = 0;
+
+  state.tarifaAplicadaLabel = "";
+  state.precioKmAplicado = 0;
+  state.descuentoAplicadoPct = 0;
+  state.tiempoEstimadoServicio = "";
+
+  state.direccionFase = "origen";
+
+  state.origenDireccion = "";
+  state.destinoDireccion = "";
+  state.origenPlaceId = "";
+  state.destinoPlaceId = "";
+
+  state.origenLatLng = null;
+  state.destinoLatLng = null;
+
+  state.routeDistanceMeters = 0;
+  state.routeDistanceText = "";
+  state.routeDurationText = "";
+
+  state.accessContext = "origen";
+
+  state.delicados = null;
+  state.delicadosDescripcion = "";
+
+  state.itemsMudanza = [];
+
+  state.deseaBodegaje = null;
+  state.diasBodegaje = 0;
+
+  state.autoSharedApplied = false;
+  state.autoSharedMessage = "";
+
+  state.origen = {
+    inmueble: null,
+    pisos: 1,
+    hayAscensor: null,
+    noCabe: null,
+    descripcion: "",
+    especiales: [],
+    camionMenos40m: null,
+    metrosExtra: 0
+  };
+
+  state.destino = {
+    inmueble: null,
+    pisos: 1,
+    hayAscensor: null,
+    noCabe: null,
+    descripcion: "",
+    especiales: [],
+    camionMenos40m: null,
+    metrosExtra: 0
+  };
+}
+
+function validateMinimumServiceForCompleta() {
+  const minimo = Number(TARIFAS.MINIMO_SERVICIO_TOTAL || 0);
+
+  if (!minimo) {
+    clearAutoSharedFlag();
+    return false;
+  }
+
+  recalcAll();
+
+  if (state.tipoMudanza !== "completa") {
+    clearAutoSharedFlag();
+    return false;
+  }
+
+  if (Number(state.precioFinal || 0) >= minimo) {
+    clearAutoSharedFlag();
+    return false;
+  }
+
+  state.tipoMudanza = "compartida";
+  calcularPrecioBase();
+
+  state.autoSharedApplied = true;
+  state.autoSharedMessage =
+    `Se ha aplicado mudanza compartida y se han reajustado las tarifas, ` +
+    `porque el total estimado no alcanza el mínimo de ${money(minimo)} para conservar el servicio completo.`;
+
+  return true;
+}
+
+/* =========================================================
    API HELPERS
 ========================================================= */
 
@@ -151,6 +279,10 @@ function notifyQuoteAbandoned() {
     state: {
       step: state.step,
       servicio: state.servicio,
+      servicioPersonalizado: state.servicioPersonalizado,
+      servicioPersonalizadoDescripcion: state.servicioPersonalizadoDescripcion,
+      autoSharedApplied: state.autoSharedApplied,
+      autoSharedMessage: state.autoSharedMessage,
       fechaMudanzaISO: state.fechaMudanzaISO,
       fechaMudanzaLabel: state.fechaMudanzaLabel,
       fechaMudanzaEsMismaSemana: state.fechaMudanzaEsMismaSemana,
@@ -257,6 +389,7 @@ async function go(stepFile) {
   renderSummary();
 
   if (stepFile === "step0-contacto") initContactoUI();
+  if (stepFile === "step1-servicio") initServicioUI();
   if (stepFile === "step1b-fecha-mudanza") initFechaMudanzaUI();
   if (stepFile === "step3-direcciones") await initDireccionesUI();
   if (stepFile === "step4-tipo-mudanza") initTipoMudanzaUI();
@@ -274,6 +407,75 @@ function initContactoUI() {
   if (nameEl) nameEl.value = state.customer.fullName || "";
   if (emailEl) emailEl.value = state.customer.email || "";
   if (phoneEl) phoneEl.value = state.customer.phone || "";
+}
+
+function initServicioUI() {
+  const mudanzaBtn = document.getElementById("servicio-mudanza-btn");
+  const continueBtn = document.getElementById("step1-continue");
+  const customCheck = document.getElementById("custom-service-check");
+  const customWrap = document.getElementById("custom-service-wrap");
+  const customText = document.getElementById("custom-service-text");
+
+  if (!mudanzaBtn || !continueBtn || !customCheck || !customWrap || !customText) return;
+
+  function renderServicioSelection() {
+    const selected = state.servicio === "mudanza";
+
+    mudanzaBtn.style.opacity = "1";
+    mudanzaBtn.style.background = selected ? "#16a34a" : "#071a36";
+    mudanzaBtn.style.borderColor = selected ? "#15803d" : "#071a36";
+    mudanzaBtn.style.color = "#ffffff";
+    mudanzaBtn.style.boxShadow = selected
+      ? "0 0 0 3px rgba(22, 163, 74, 0.18)"
+      : "";
+    mudanzaBtn.textContent = selected ? "✅ Mudanza seleccionada" : "🚚 Mudanza";
+
+    customCheck.checked = state.servicioPersonalizado === true;
+    customWrap.style.display = state.servicioPersonalizado === true ? "block" : "none";
+    customText.value = state.servicioPersonalizadoDescripcion || "";
+  }
+
+  mudanzaBtn.addEventListener("click", () => {
+    state.servicio = "mudanza";
+    renderServicioSelection();
+  });
+
+  customCheck.addEventListener("change", () => {
+    state.servicioPersonalizado = customCheck.checked;
+
+    if (!customCheck.checked) {
+      state.servicioPersonalizadoDescripcion = "";
+      customText.value = "";
+    }
+
+    renderServicioSelection();
+  });
+
+  customText.addEventListener("input", () => {
+    state.servicioPersonalizadoDescripcion = customText.value.trim();
+  });
+
+  continueBtn.addEventListener("click", async () => {
+    if (!state.servicio) {
+      alert("Por favor selecciona el servicio que deseas cotizar.");
+      return;
+    }
+
+    if (state.servicioPersonalizado === true) {
+      const desc = customText.value.trim();
+      if (!desc) {
+        alert("Por favor describe el servicio personalizado.");
+        return;
+      }
+      state.servicioPersonalizadoDescripcion = desc;
+    } else {
+      state.servicioPersonalizadoDescripcion = "";
+    }
+
+    await go("step1b-fecha-mudanza");
+  });
+
+  renderServicioSelection();
 }
 
 function initFechaMudanzaUI() {
@@ -342,8 +544,18 @@ function initFechaMudanzaUI() {
 }
 
 function initTipoMudanzaUI() {
+  const minNote = document.getElementById("mudanza-minimo-note");
   const fechaInfo = document.getElementById("mudanza-fecha-info");
   const tarifaNote = document.getElementById("mudanza-tarifa-note");
+
+  if (minNote) {
+    minNote.innerHTML = `
+      <b>Importante:</b> Para conservar el servicio de <b>mudanza completa</b>,
+      el valor total estimado debe ser mínimo de <b>${money(TARIFAS.MINIMO_SERVICIO_TOTAL)}</b>.
+      Si al avanzar la cotización el total queda por debajo de ese valor,
+      se aplicará automáticamente la modalidad <b>mudanza compartida</b> y se reajustarán las tarifas.
+    `;
+  }
 
   if (fechaInfo) {
     fechaInfo.innerHTML = `
@@ -898,12 +1110,9 @@ function refreshEspecialesUI() {
             <div class="especial-meta" style="margin-top:10px;">
               <b>Método por este ítem:</b>
               <div class="method-pills" style="margin-top:8px;">
-                <button class="pill ${metodo === "escalera" ? "active" : ""
-          }" data-method="escalera">Escalera</button>
-                <button class="pill ${metodo === "fachada_manual" ? "active" : ""
-          }" data-method="fachada_manual">Fachada Manual</button>
-                <button class="pill ${metodo === "montacarga" ? "active" : ""
-          }" data-method="montacarga">Montacarga</button>
+                <button class="pill ${metodo === "escalera" ? "active" : ""}" data-method="escalera">Escalera</button>
+                <button class="pill ${metodo === "fachada_manual" ? "active" : ""}" data-method="fachada_manual">Fachada Manual</button>
+                <button class="pill ${metodo === "montacarga" ? "active" : ""}" data-method="montacarga">Montacarga</button>
               </div>
 
               ${!metodo
@@ -1125,6 +1334,7 @@ async function initItemsMudanzaUI() {
       cont.textContent = "Continuando...";
 
       try {
+        validateMinimumServiceForCompleta();
         await go("step15b-bodegaje");
       } catch (err) {
         console.error(err);
@@ -1176,8 +1386,7 @@ function refreshItemsMudanzaUI() {
         <div class="especial-actions">
           <button class="remove-x" title="Quitar" data-remove-item="1">×</button>
           <div class="small-qty">
-            <button data-qty-item="dec" ${Number(it.qty || 0) <= 1 ? "disabled" : ""
-          }>-</button>
+            <button data-qty-item="dec" ${Number(it.qty || 0) <= 1 ? "disabled" : ""}>-</button>
             <span class="num">${Number(it.qty || 0)}</span>
             <button data-qty-item="inc">+</button>
           </div>
@@ -1361,6 +1570,19 @@ function initBodegajeUI() {
 
   let submitting = false;
 
+  function renderAutoSharedStatus() {
+    if (state.autoSharedApplied && state.autoSharedMessage) {
+      statusEl.className = "cf-send-status success";
+      statusEl.style.display = "block";
+      statusEl.textContent = state.autoSharedMessage;
+      return;
+    }
+
+    statusEl.style.display = "none";
+    statusEl.textContent = "";
+    statusEl.className = "cf-send-status";
+  }
+
   function renderSelection() {
     yesBtn.classList.toggle("active", state.deseaBodegaje === true);
     noBtn.classList.toggle("active", state.deseaBodegaje === false);
@@ -1372,6 +1594,8 @@ function initBodegajeUI() {
     } else if (state.deseaBodegaje !== true) {
       diasInput.value = "";
     }
+
+    renderAutoSharedStatus();
   }
 
   function setLoading(isLoading, message = "") {
@@ -1391,9 +1615,8 @@ function initBodegajeUI() {
         ${message || "Estamos preparando tu cotización, por favor espera..."}
       `;
     } else {
-      continueBtn.textContent = "Continuar";
-      statusEl.style.display = "none";
-      statusEl.innerHTML = "";
+      continueBtn.textContent = "Ver resumen final";
+      renderAutoSharedStatus();
     }
   }
 
@@ -1449,7 +1672,6 @@ function initBodegajeUI() {
 
   renderSelection();
 }
-
 
 function renderFinal() {
   const el = document.getElementById("final-summary");
@@ -1626,6 +1848,15 @@ function renderFinal() {
         </div>
 
         <div class="cf-invoice-body">
+          ${state.autoSharedApplied && state.autoSharedMessage
+      ? `
+            <div class="cf-note success" style="margin-bottom:14px;">
+              ${escapeHTML(state.autoSharedMessage)}
+            </div>
+          `
+      : ""
+    }
+
           <div class="cf-invoice-grid">
             <div class="cf-summary-tile">
               <div class="cf-summary-label">Ruta</div>
@@ -1666,7 +1897,17 @@ function renderFinal() {
             <b>Cliente:</b> ${escapeHTML(state.customer.fullName || "—")}<br>
             <b>Correo:</b> ${escapeHTML(state.customer.email || "—")}<br>
             <b>Teléfono:</b> ${escapeHTML(state.customer.phone || "—")}<br>
-            <b>Tiempo estimado del servicio:</b> ${escapeHTML(state.tiempoEstimadoServicio || "—")}<br><br>
+            <b>Servicio personalizado:</b> ${state.servicioPersonalizado === true ? "Sí" : "No"}
+            ${state.servicioPersonalizado === true
+      ? `<br><b>Descripción servicio personalizado:</b> ${escapeHTML(
+        state.servicioPersonalizadoDescripcion || "—"
+      )}`
+      : ""
+    }
+            <br><br>
+            <b>Tiempo estimado del servicio:</b> ${escapeHTML(
+      state.tiempoEstimadoServicio || "—"
+    )}<br><br>
             <b>Bodegaje:</b> ${state.deseaBodegaje === true
       ? `Sí (${Number(state.diasBodegaje || 0)} días)`
       : state.deseaBodegaje === false
@@ -1788,6 +2029,25 @@ document.addEventListener("click", async (e) => {
 
   if (t.dataset.back) {
     if (
+      state.step === "step15b-bodegaje" ||
+      state.step === "step15-items-mudanza" ||
+      state.step === "step14-delicados-desc" ||
+      state.step === "step13-delicados" ||
+      state.step === "step12-metros-extra" ||
+      state.step === "step11-camion-40m" ||
+      state.step === "step10-objetos" ||
+      state.step === "step8-no-cabe" ||
+      state.step === "step7-ascensor" ||
+      state.step === "step6-pisos" ||
+      state.step === "step5-tipo-inmueble" ||
+      state.step === "step4-tipo-mudanza" ||
+      state.step === "step3-direcciones" ||
+      state.step === "step1b-fecha-mudanza"
+    ) {
+      clearAutoSharedFlag();
+    }
+
+    if (
       t.dataset.back === "step2-tipo-ruta" &&
       state.step === "step3-direcciones" &&
       state.direccionFase === "destino"
@@ -1797,7 +2057,28 @@ document.addEventListener("click", async (e) => {
       return;
     }
 
+    if (
+      t.dataset.back === "step4-tipo-mudanza" &&
+      state.step === "step5-tipo-inmueble" &&
+      state.accessContext === "destino"
+    ) {
+      state.accessContext = "origen";
+
+      if (state.origen.camionMenos40m === false) {
+        await go("step12-metros-extra");
+      } else {
+        await go("step11-camion-40m");
+      }
+      return;
+    }
+
     await go(t.dataset.back);
+    return;
+  }
+
+  if (t.id === "restart-quote-btn") {
+    resetQuoteState();
+    await go("step0-contacto");
     return;
   }
 
@@ -1825,16 +2106,6 @@ document.addEventListener("click", async (e) => {
     return;
   }
 
-  if (t.dataset.servicio) {
-    state.servicio = t.dataset.servicio;
-    await go("step1b-fecha-mudanza");
-    return;
-  }
-
-  if (t.id === "fecha-mudanza-continue") {
-    return;
-  }
-
   if (t.dataset.ruta) {
     state.tipoRuta = t.dataset.ruta;
     state.direccionFase = "origen";
@@ -1843,6 +2114,7 @@ document.addEventListener("click", async (e) => {
   }
 
   if (t.dataset.mudanza) {
+    clearAutoSharedFlag();
     state.tipoMudanza = t.dataset.mudanza;
     calcularPrecioBase();
     await go("step5-tipo-inmueble");
@@ -1851,6 +2123,7 @@ document.addEventListener("click", async (e) => {
 
   const mudanzaCard = t.closest?.("[data-mudanza]");
   if (mudanzaCard && mudanzaCard.dataset?.mudanza && !t.dataset?.mudanza) {
+    clearAutoSharedFlag();
     state.tipoMudanza = mudanzaCard.dataset.mudanza;
     calcularPrecioBase();
     await go("step5-tipo-inmueble");
@@ -1886,6 +2159,7 @@ document.addEventListener("click", async (e) => {
       return;
     }
     if (state.accessContext === "destino") {
+      state.destino.inmueble = inmuebleCard.dataset.inmueble;
       state.destino.inmueble = inmuebleCard.dataset.inmueble;
       await go("step6-pisos");
       return;
@@ -1951,14 +2225,12 @@ document.addEventListener("click", async (e) => {
     }
     return;
   }
-});
 
-document.addEventListener("click", async (e) => {
-  const t = e.target;
   if (t.id === "delicados-continue") {
     const txt = (document.getElementById("delicados-text")?.value || "").trim();
     state.delicadosDescripcion = txt;
     await go("step15-items-mudanza");
+    return;
   }
 });
 
@@ -2004,8 +2276,7 @@ function renderCatalogHTML(grouped, searchTerm = "") {
         const variants = ((grouped[zona] || {})[espacio] || {})[objeto] || [];
 
         for (const v of variants) {
-          const key = `${zona}__${espacio}__${objeto}__${v.tipo || ""}__${v.variante || ""
-            }`.toLowerCase();
+          const key = `${zona}__${espacio}__${objeto}__${v.tipo || ""}__${v.variante || ""}`.toLowerCase();
 
           const safeKey = cssSafe(key);
           const variantLabel = v.variante ? `${v.tipo} — ${v.variante}` : `${v.tipo}`;
@@ -2068,7 +2339,6 @@ function renderCatalogHTML(grouped, searchTerm = "") {
         espacioHtml = `
           <details class="lvl2" ${isOpen ? "open" : ""}>
             <summary>${escapeHTML(espacio)}</summary>
-            <div style="margin-top:10px;"></div>
             ${espacioHtml}
           </details>
         `;
@@ -2081,7 +2351,6 @@ function renderCatalogHTML(grouped, searchTerm = "") {
       html += `
         <details ${isOpen ? "open" : ""}>
           <summary>${escapeHTML(zona)}</summary>
-          <div style="margin-top:10px;"></div>
           ${zonaHtml}
         </details>
       `;
@@ -2116,8 +2385,7 @@ function renderCatalogHTMLForItems(grouped, searchTerm = "") {
         const variants = ((grouped[zona] || {})[espacio] || {})[objeto] || [];
 
         for (const v of variants) {
-          const key = `item__${zona}__${espacio}__${objeto}__${v.tipo || ""}__${v.variante || ""
-            }`.toLowerCase();
+          const key = `item__${zona}__${espacio}__${objeto}__${v.tipo || ""}__${v.variante || ""}`.toLowerCase();
 
           const safeKey = cssSafe(key);
           const variantLabel = v.variante ? `${v.tipo} — ${v.variante}` : `${v.tipo}`;
@@ -2180,7 +2448,6 @@ function renderCatalogHTMLForItems(grouped, searchTerm = "") {
         espacioHtml = `
           <details class="lvl2" ${isOpen ? "open" : ""}>
             <summary>${escapeHTML(espacio)}</summary>
-            <div style="margin-top:10px;"></div>
             ${espacioHtml}
           </details>
         `;
@@ -2193,7 +2460,6 @@ function renderCatalogHTMLForItems(grouped, searchTerm = "") {
       html += `
         <details ${isOpen ? "open" : ""}>
           <summary>${escapeHTML(zona)}</summary>
-          <div style="margin-top:10px;"></div>
           ${zonaHtml}
         </details>
       `;

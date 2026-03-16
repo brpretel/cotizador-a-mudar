@@ -1,6 +1,8 @@
 export const TARIFAS = {
   M3_ESTANDAR: 40000,
 
+  MINIMO_SERVICIO_TOTAL: 500000,
+
   RECARGOS: {
     POR_PISO_ESCALERA: 5000,       // por piso (si NO hay ascensor)
     FACHADA_MANUAL: 15000,         // recargo por m3 (especiales)

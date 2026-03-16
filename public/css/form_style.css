@@ -18,6 +18,7 @@ body {
   padding: 35px;
   border-radius: 14px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  overflow: visible;
 }
 
 .cf-title {
@@ -47,6 +48,7 @@ body {
   font-size: 17px;
   font-weight: 600;
   transition: 0.25s;
+  border: 1px solid transparent;
 }
 
 .cf-btn:hover {
@@ -135,6 +137,7 @@ textarea.cf-input:focus {
   color: #334155;
   font-size: 14px;
   line-height: 1.5;
+  margin-top: 12px;
   margin-bottom: 12px;
 }
 
@@ -466,7 +469,9 @@ textarea.cf-input:focus {
   background: #f8fafc;
   padding: 14px;
   max-height: 620px;
-  overflow: auto;
+  overflow-x: visible;
+  overflow-y: auto;
+  position: relative;
 }
 
 .catalog::-webkit-scrollbar {
@@ -484,8 +489,9 @@ textarea.cf-input:focus {
   background: #fff;
   padding: 0;
   margin-bottom: 12px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+  position: relative;
 }
 
 .catalog summary {
@@ -520,7 +526,8 @@ textarea.cf-input:focus {
 }
 
 .catalog details > div {
-  padding: 0 12px 12px;
+  padding: 5px 12px;
+  overflow: visible;
 }
 
 .catalog .lvl2 {
@@ -530,6 +537,8 @@ textarea.cf-input:focus {
   border: 1px solid #e3e6ee;
   padding: 0;
   box-shadow: none;
+  overflow: visible;
+  position: relative;
 }
 
 .catalog .lvl2 > summary {
@@ -555,11 +564,13 @@ textarea.cf-input:focus {
 
 .item-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
   padding: 10px 0;
   border-bottom: 1px dashed #e9ecf3;
+  overflow: visible;
+  position: relative;
 }
 
 .item-row:last-child {
@@ -572,6 +583,8 @@ textarea.cf-input:focus {
   align-items: center;
   color: #071a36;
   font-weight: 600;
+  overflow: visible;
+  position: relative;
 }
 
 .item-sub {
@@ -629,32 +642,51 @@ textarea.cf-input:focus {
   cursor: pointer;
   border: 1px solid #dbe5ff;
   flex: 0 0 auto;
+  overflow: visible;
+  z-index: 500;
 }
 
 .info:hover .tip,
-.info:focus .tip {
+.info:focus .tip,
+.info:focus-within .tip {
   opacity: 1;
-  transform: translateY(0);
+  visibility: visible;
   pointer-events: auto;
 }
 
 .tip {
   position: absolute;
   left: 0;
-  top: 28px;
-  width: 240px;
+  bottom: calc(100% + 10px);
+  transform: none;
+  width: max-content;
+  min-width: 220px;
+  max-width: min(360px, calc(100vw - 32px));
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
   background: #071a36;
   color: #fff;
   padding: 10px 12px;
   border-radius: 10px;
   font-size: 12px;
-  opacity: 0;
-  transform: translateY(-6px);
-  transition: 0.15s;
-  pointer-events: none;
-  z-index: 50;
   line-height: 1.4;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 99999;
   box-shadow: 0 8px 18px rgba(2, 6, 23, 0.22);
+}
+
+.tip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 18px;
+  transform: none;
+  border-width: 6px;
+  border-style: solid;
+  border-color: #071a36 transparent transparent transparent;
 }
 
 .tip b {
@@ -785,6 +817,7 @@ textarea.cf-input:focus {
   border-radius: 18px;
   padding: 18px;
   margin-top: 12px;
+  overflow: visible;
 }
 
 .cf-step-chip {
@@ -1349,9 +1382,35 @@ textarea.cf-input:focus {
     min-height: 100px;
     padding: 14px 12px;
   }
+
+  .item-row {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .item-title {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .qty {
+    justify-self: start;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .tip {
+    left: 0;
+    transform: none;
+    min-width: 180px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .tip::after {
+    left: 18px;
+    transform: none;
+  }
 }
-
-
 
 .cf-inline-loader {
   width: 16px;

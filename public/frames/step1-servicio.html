@@ -2,6 +2,25 @@
   <h2 class="cf-title">¿Qué servicio deseas cotizar?</h2>
   <p class="cf-subtitle">Elige el tipo de servicio para empezar.</p>
 
-  <button class="cf-btn" data-servicio="mudanza">🚚 Mudanza</button>
-  <!-- <button class="cf-btn" data-servicio="bodegaje">📦 Bodegaje</button> -->
+  <button class="cf-btn" data-servicio="mudanza" id="servicio-mudanza-btn">🚚 Mudanza</button>
+
+  <div class="cf-note" style="margin-top:12px;">
+    Si además requieres un servicio especial o fuera de lo común, puedes indicarlo antes de continuar.
+  </div>
+
+  <label
+    style="display:flex; align-items:flex-start; gap:10px; margin:16px 0 10px 0; color:#071a36; font-weight:600; font-size:14px;">
+    <input type="checkbox" id="custom-service-check" style="margin-top:3px;" />
+    <span>¿Requieres algún servicio personalizado?</span>
+  </label>
+
+  <div id="custom-service-wrap" style="display:none;">
+    <label class="cf-label" for="custom-service-text">Descríbenos el servicio personalizado</label>
+    <textarea id="custom-service-text" class="cf-input" rows="4"
+      placeholder="Ej: necesito apoyo con empaque especial, desmonte de muebles, maniobra particular, almacenamiento especial, etc."></textarea>
+  </div>
+
+  <button class="cf-btn" id="step1-continue" style="margin-top:12px;">
+    Continuar
+  </button>
 </div>
